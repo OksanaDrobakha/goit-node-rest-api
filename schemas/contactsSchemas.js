@@ -1,0 +1,15 @@
+import Joi from "joi";
+
+export const createContactSchema = Joi.object({
+  id: Joi.string().required(),
+  name: Joi.string().required(),
+  email: Joi.string().required(),
+  phone: Joi.string().required(),
+});
+
+export const updateContactSchema = Joi.object({
+  id: Joi.string().required(),
+  name: Joi.string().required(),
+  email: Joi.string().required(),
+  phone: Joi.string().required(),
+});
