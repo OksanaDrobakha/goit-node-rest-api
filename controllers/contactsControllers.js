@@ -34,9 +34,7 @@ export const removeContact = async (req, res, next) => {
     if (!result) {
       throw HttpError(404, `Not found`);
     }
-    res.json({
-      message: "Delete success",
-    });
+    res.json(result);
   } catch (error) {
     next(error);
   }
@@ -63,7 +61,7 @@ export const updateContact = async (req, res, next) => {
       throw HttpError(400, error.message);
     }
     const { id } = req.params;
-    const result = await contactsServices.updateContactById(id, req.body);
+    const result = await contactsServices.updateContact(id, req.body);
     if (!result) {
       throw HttpError(404, `Not found`);
     }

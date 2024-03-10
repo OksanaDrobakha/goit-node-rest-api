@@ -10,34 +10,34 @@ export const listContacts = async () => {
 };
 
 export const getContactById = async (id) => {
-  const contacts = await getAllContacts();
+  const contacts = await listContacts();
   const result = contacts.find((item) => item.id === id);
 
   return result || null;
 };
 
 export const removeContact = async (id) => {
-  const contacts = await getAllContacts();
+  const contacts = await listContacts();
   const index = contacts.findIndex((item) => item.id === id);
   if (index === -1) {
     return null;
   }
   const [result] = contacts.splice(index, 1);
-  await updateContacts(contacts);
+  await updateContact(contacts);
 
   return result;
 };
 
 export const createContact = async (data) => {
-  const contacts = await getAllContacts();
+  const contacts = await listContacts();
   const newContact = {
     id: nanoid(),
     ...data,
   };
   contacts.push(newContact);
-  await updateContacts(contacts);
+  await updateContact(contacts);
   return newContact;
 };
 
-export const updateContacts = (contacts) =>
-  fs.writeFile(contactsPath, JSON.stringify(contacts, null, 2));
+export const updateContact = (contact) =>
+  fs.writeFile(contactsPath, JSON.stringify(contact, null, 2));
