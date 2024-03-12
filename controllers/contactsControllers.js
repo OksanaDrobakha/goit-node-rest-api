@@ -56,14 +56,15 @@ export const createContact = async (req, res, next) => {
 
 export const updateContact = async (req, res, next) => {
   try {
-    const { id } = req.params;
-    const result = await contactsServices.updateContact(id, req.body);
     const { error } = updateContactSchema.validate(req.body);
     if (error) {
       throw HttpError(400, error.message);
     }
-    if (Object.keys(req.body).length === 0)
-      throw HttpError(400, `Body must have at least one field`);
+    const { id } = req.params;
+    if (!req.body || Object.keys(req.body).length === 0) {
+      throw HttpError(400, "Body must have at least one field");
+    }
+    const result = await contactsServices.updateContactById(id, req.body);
     if (!result) {
       throw HttpError(404, `Not found`);
     }
