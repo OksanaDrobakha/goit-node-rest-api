@@ -18,8 +18,10 @@ const signup = async (req, res) => {
   const newUser = await authServices.signup(req.body);
 
   res.status(201).json({
-    username: newUser.username,
-    email: newUser.email,
+    user: {
+      email: newUser.email,
+      subscription: newUser.subscription,
+    },
   });
 };
 
