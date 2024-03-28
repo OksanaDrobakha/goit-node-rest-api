@@ -1,10 +1,8 @@
 import jwt from "jsonwebtoken";
-
 import * as authServices from "../services/authServices.js";
-
 import HttpError from "../helpers/HttpError.js";
-
 import ctrlWrapper from "../helpers/ctrlWrapper.js";
+import dotenv from "dotenv/config";
 
 const { JWT_SECRET } = process.env;
 
@@ -46,28 +44,28 @@ const signin = async (req, res) => {
   };
 
   const token = jwt.sign(payload, JWT_SECRET, { expiresIn: "23h" });
-
+  await authServices.updateUser({ _id: id }, { token });
   res.json({
     token,
+    user: {
+      email,
+      subscription: user.subscription,
+    },
   });
 };
 
 const getCurrent = async (req, res) => {
-  const { username, email } = req.user;
-
+  const { email, subscription } = req.user;
   res.json({
-    username,
     email,
+    subscription,
   });
 };
 
 const signout = async (req, res) => {
   const { _id } = req.user;
   await authServices.updateUser({ _id }, { token: "" });
-
-  res.json({
-    message: "Signout success",
-  });
+  res.status(204).send();
 };
 
 export default {
