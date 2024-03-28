@@ -16,11 +16,7 @@ export const listContacts = async (req, res, next) => {
     if (favorite) {
       query.favorite = favorite;
     }
-    const result = await contactsServices.listContacts(query, {
-      skip,
-      limit,
-      favorite,
-    });
+    const result = await contactsServices.listContacts({ owner });
     res.json(result);
   } catch (error) {
     next(error);
