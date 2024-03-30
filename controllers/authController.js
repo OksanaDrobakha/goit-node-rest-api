@@ -3,6 +3,8 @@ import * as authServices from "../services/authServices.js";
 import HttpError from "../helpers/HttpError.js";
 import ctrlWrapper from "../helpers/ctrlWrapper.js";
 import dotenv from "dotenv/config";
+import gravatar from "gravatar";
+import Jimp from "jimp";
 
 const { JWT_SECRET } = process.env;
 
@@ -12,8 +14,8 @@ const signup = async (req, res) => {
   if (user) {
     throw HttpError(409, "Email in use");
   }
-
-  const newUser = await authServices.signup(req.body);
+  const avatar = gravatar.url(email, { s: "200", r: "pg", d: "404" });
+  const newUser = await authServices.signup({ ...req.body, avatarURL: avatar });
 
   res.status(201).json({
     user: {
@@ -68,9 +70,26 @@ const signout = async (req, res) => {
   res.status(204).send();
 };
 
+const updateAvatars = async (req, res) => {
+  const { path: oldPath, filename } = req.file;
+  const { _id } = req.user;
+  const newPath = path.join(avatarPath, filename);
+
+  const resizedAvatar = await Jimp.read(oldPath);
+  await resizedAvatar.resize(250, 250).write(oldPath);
+
+  await fs.rename(oldPath, newPath);
+  const avatar = path.join("avatars", filename);
+  await userServices.updateUser({ _id }, { avatarURL: avatar });
+  res.json({
+    avatarURL: avatar,
+  });
+};
+
 export default {
   signup: ctrlWrapper(signup),
   signin: ctrlWrapper(signin),
   getCurrent: ctrlWrapper(getCurrent),
   signout: ctrlWrapper(signout),
+  updateAvatars: ctrlWrapper(updateAvatars),
 };
