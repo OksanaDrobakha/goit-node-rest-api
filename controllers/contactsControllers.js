@@ -1,3 +1,5 @@
+import fs from "fs/promises";
+import path from "path";
 import * as contactsServices from "../services/contactsServices.js";
 import ctrlWrapper from "../helpers/ctrlWrapper.js";
 import HttpError from "../helpers/HttpError.js";
@@ -6,6 +8,8 @@ import {
   updateContactSchema,
   updateFavoriteSchema,
 } from "../schemas/contactsSchemas.js";
+
+const avatarsPath = path.resolve("public", "avatars");
 
 export const listContacts = async (req, res, next) => {
   try {
@@ -58,7 +62,15 @@ export const createContact = async (req, res, next) => {
     if (error) {
       throw HttpError(400, error.message);
     }
-    const result = await contactsServices.createContact({ ...req.body, owner });
+    const { path: oldPath, filename } = req.file;
+    const newPath = path.join(avatarsPath, filename);
+    await fs.rename(oldPath, newPath);
+    const avatar = path.join("avatars", filename);
+    const result = await contactsServices.createContact({
+      ...req.body,
+      avatar,
+      owner,
+    });
 
     res.status(201).json(result);
   } catch (error) {
