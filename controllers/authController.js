@@ -7,8 +7,10 @@ import dotenv from "dotenv/config";
 import gravatar from "gravatar";
 import Jimp from "jimp";
 import path from "path";
+import { nanoid } from "nanoid";
+import sendEmail from "../helpers/sendEmail.js";
 
-const { JWT_SECRET } = process.env;
+const { JWT_SECRET, BASE_URL } = process.env;
 const avatarsPath = path.resolve("public", "avatars");
 
 const signup = async (req, res) => {
@@ -17,8 +19,23 @@ const signup = async (req, res) => {
   if (user) {
     throw HttpError(409, "Email in use");
   }
+
+  const verificationToken = nanoid();
+
   const avatar = gravatar.url(email, { s: "200", r: "pg", d: "404" });
-  const newUser = await authServices.signup({ ...req.body, avatarURL: avatar });
+  const newUser = await authServices.signup({
+    ...req.body,
+    verificationToken,
+    avatarURL: avatar,
+  });
+
+  const verifyEmail = {
+    to: email,
+    subject: "Verify email",
+    html: `<a href="${BASE_URL}/api/auth/verify/${verificationToken}" target="_blank">Click to verify</a>`,
+  };
+
+  await sendEmail(verifyEmail);
 
   res.status(201).json({
     user: {
