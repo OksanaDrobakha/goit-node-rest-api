@@ -32,7 +32,7 @@ const signup = async (req, res) => {
   const verifyEmail = {
     to: email,
     subject: "Verify email",
-    html: `<a href="${BASE_URL}/api/auth/verify/${verificationToken}" target="_blank">Click to verify</a>`,
+    html: `<a href="${BASE_URL}/users/verify/${verificationToken}" target="_blank">Click to verify</a>`,
   };
 
   await sendEmail(verifyEmail);
@@ -53,7 +53,7 @@ const verify = async (req, res) => {
   }
   await authServices.updateUser(
     { _id: user._id },
-    { verify: true, verificationToken: "" }
+    { verify: true, verificationToken: " " }
   );
 
   res.json({
@@ -74,7 +74,7 @@ const resendVerify = async (req, res) => {
   const verifyEmail = {
     to: email,
     subject: "Verify email",
-    html: `<a href="${BASE_URL}/api/auth/verify/${user.verificationToken}" target="_blank">Click to verify</a>`,
+    html: `<a href="${BASE_URL}/users/verify/${user.verificationToken}" target="_blank">Click to verify</a>`,
   };
 
   await sendEmail(verifyEmail);

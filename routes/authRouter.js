@@ -17,18 +17,18 @@ authRouter.post(
   authController.signup
 );
 
-authRouter.post(
-  "/login",
-  validateBody(userSigninSchema),
-  authController.signin
-);
-
 authRouter.get("/verify/:verificationToken", authController.verify);
 
 authRouter.post(
   "/verify",
   validateBody(userEmailSchema),
   authController.resendVerify
+);
+
+authRouter.post(
+  "/login",
+  validateBody(userSigninSchema),
+  authController.signin
 );
 
 authRouter.get("/current", authenticate, authController.getCurrent);
