@@ -49,7 +49,7 @@ const verify = async (req, res) => {
   const { verificationToken } = req.params;
   const user = await authServices.findUser({ verificationToken });
   if (!user) {
-    throw HttpError(404, "verificationToken not found");
+    throw HttpError(404, "User not found");
   }
   await authServices.updateUser(
     { _id: user._id },
