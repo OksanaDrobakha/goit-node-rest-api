@@ -7,8 +7,10 @@ import dotenv from "dotenv/config";
 import gravatar from "gravatar";
 import Jimp from "jimp";
 import path from "path";
+import { nanoid } from "nanoid";
+import sendEmail from "../helpers/sendEmail.js";
 
-const { JWT_SECRET } = process.env;
+const { JWT_SECRET, BASE_URL } = process.env;
 const avatarsPath = path.resolve("public", "avatars");
 
 const signup = async (req, res) => {
@@ -17,8 +19,23 @@ const signup = async (req, res) => {
   if (user) {
     throw HttpError(409, "Email in use");
   }
+
+  const verificationToken = nanoid();
+
   const avatar = gravatar.url(email, { s: "200", r: "pg", d: "404" });
-  const newUser = await authServices.signup({ ...req.body, avatarURL: avatar });
+  const newUser = await authServices.signup({
+    ...req.body,
+    verificationToken,
+    avatarURL: avatar,
+  });
+
+  const verifyEmail = {
+    to: email,
+    subject: "Verify email",
+    html: `<a href="${BASE_URL}/users/verify/${verificationToken}" target="_blank">Click to verify</a>`,
+  };
+
+  await sendEmail(verifyEmail);
 
   res.status(201).json({
     user: {
@@ -28,11 +45,53 @@ const signup = async (req, res) => {
   });
 };
 
+const verify = async (req, res) => {
+  const { verificationToken } = req.params;
+  const user = await authServices.findUser({ verificationToken });
+  if (!user) {
+    throw HttpError(404, "User not found");
+  }
+  await authServices.updateUser(
+    { _id: user._id },
+    { verify: true, verificationToken: " " }
+  );
+
+  res.json({
+    message: "Email verify success",
+  });
+};
+
+const resendVerify = async (req, res) => {
+  const { email } = req.body;
+  const user = await authServices.findUser({ email });
+  if (!user) {
+    throw HttpError(404, "Email not found");
+  }
+  if (user.verify) {
+    throw HttpError(400, "Email already verify");
+  }
+
+  const verifyEmail = {
+    to: email,
+    subject: "Verify email",
+    html: `<a href="${BASE_URL}/users/verify/${user.verificationToken}" target="_blank">Click to verify</a>`,
+  };
+
+  await sendEmail(verifyEmail);
+
+  res.json({
+    message: "Verify email send success",
+  });
+};
+
 const signin = async (req, res) => {
   const { email, password } = req.body;
   const user = await authServices.findUser({ email });
   if (!user) {
     throw HttpError(401, "Email or password invalid");
+  }
+  if (!user.verify) {
+    throw HttpError(401, "Email not verify");
   }
   const comparePassword = await authServices.validatePassword(
     password,
@@ -92,6 +151,8 @@ const updateAvatars = async (req, res) => {
 
 export default {
   signup: ctrlWrapper(signup),
+  verify: ctrlWrapper(verify),
+  resendVerify: ctrlWrapper(resendVerify),
   signin: ctrlWrapper(signin),
   getCurrent: ctrlWrapper(getCurrent),
   signout: ctrlWrapper(signout),
